@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Check, SlidersHorizontal } from "lucide-react";
-import { COLORS, SIZES, logoSrc, money, productById, products, type MerchColor, type MerchSize, type Product } from "@/lib/copper-data";
+import { money, productById, products, shopCategories, shopPerks } from "@/lib/copper-data";
 import { useApp, type CartLine } from "@/lib/store";
-import { BackBar, Badge, Btn, Chip, Empty, Field, HeartBtn, Photo, SelectField, Sheet, Stars, TextField, statusTone } from "./ui";
+import { BackBar, Badge, Btn, Chip, Empty, Field, HeartBtn, Photo, SelectField, Sheet, TextField, statusTone } from "./ui";
 
 export function ShopScreen() {
   const { push, wishlist, toggleWish, addToCart } = useApp();
@@ -10,9 +10,7 @@ export function ShopScreen() {
   const [cat, setCat] = useState("All");
   const [sort, setSort] = useState("Featured");
   const [filter, setFilter] = useState(false);
-  const [size, setSize] = useState("Any");
-  const [color, setColor] = useState("Any");
-  const [max, setMax] = useState(60);
+  const [max, setMax] = useState(58);
 
   const list = useMemo(() => {
     let rows = products.filter((p) => (cat === "All" || p.category === cat) && p.name.toLowerCase().includes(q.toLowerCase()) && p.price <= max);
@@ -25,88 +23,81 @@ export function ShopScreen() {
   return (
     <div className="h-full overflow-y-auto pb-28">
       <div className="bg-[#00264C] px-5 pb-5 pt-6 text-white">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#BD915F]">COPPER ROAD MERCH</p>
-        <h1 className="font-display text-4xl leading-none">COPPER ROAD MERCH</h1>
-        <p className="mt-2 text-sm text-white/75">Showcase branded merchandise for Maine Coon lovers and Copper Road families.</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#BD915F]">Copper Road Wear & Accents</p>
+        <h1 className="font-display text-4xl leading-none">CATTERY MERCHANDISE</h1>
+        <p className="mt-2 text-sm text-white/75">
+          All proceeds go directly back into our veterinary health testing program, certified organic nutrition, and high-quality play structures for our kittens.
+        </p>
       </div>
       <div className="space-y-3 px-4 py-3">
-        <TextField value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search tees and hoodies" />
-        <div className="flex gap-2">
-          {["All", "T-Shirts", "Hoodies"].map((c) => (
+        <TextField value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search merchandise" />
+        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
+          {shopCategories.map((c) => (
             <Chip key={c} active={cat === c} onClick={() => setCat(c)}>
               {c}
             </Chip>
           ))}
-          <button onClick={() => setFilter(true)} className="grid h-9 w-11 place-items-center rounded-full bg-white shadow-sm" aria-label="Filter">
+          <button onClick={() => setFilter(true)} className="grid h-9 w-11 shrink-0 place-items-center rounded-full bg-white shadow-sm" aria-label="Filter">
             <SlidersHorizontal size={16} />
           </button>
         </div>
         <SelectField value={sort} onChange={setSort} options={["Featured", "Price Low–High", "High–Low", "Newest"]} />
-        <div className="overflow-hidden rounded-3xl bg-[#00264C] text-white">
-          <Photo src={products[0].images.Copper} alt="Featured Copper Road classic t-shirt" className="h-36 w-full" />
+        <button className="block w-full overflow-hidden rounded-3xl bg-[#00264C] text-left text-white" onClick={() => push({ name: "product", id: products[0].id })}>
+          <Photo src={products[0].image} alt={products[0].name} className="h-40 w-full" />
           <div className="p-4">
-            <p className="text-xs uppercase tracking-widest text-[#BD915F]">Featured</p>
-            <p className="font-display text-2xl">Classic tee, copper clay</p>
+            <p className="text-xs uppercase tracking-widest text-[#BD915F]">{products[0].tag}</p>
+            <p className="font-display text-2xl">{products[0].name}</p>
+            <p className="text-sm text-white/80">{money(products[0].price)}</p>
           </div>
-        </div>
+        </button>
         <div className="grid grid-cols-2 gap-3">
           {list.map((p) => (
             <article key={p.id} className="overflow-hidden rounded-3xl bg-white shadow-sm">
               <button className="relative block w-full text-left" onClick={() => push({ name: "product", id: p.id })}>
-                <ProductShot product={p} color="Copper" />
+                <Photo src={p.image} alt={p.name} className="aspect-[41/34] w-full" />
+                {p.tag && (
+                  <div className="absolute left-2 top-2">
+                    <Badge tone="navy">{p.tag}</Badge>
+                  </div>
+                )}
                 <div className="absolute right-2 top-2">
                   <HeartBtn on={wishlist.includes(p.id)} label="Save" onClick={() => toggleWish(p.id)} />
                 </div>
               </button>
               <div className="p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#BD915F]">{p.category}</p>
                 <h2 className="font-display text-lg leading-tight">{p.name}</h2>
                 <p className="text-sm font-semibold text-[#BD915F]">{money(p.price)}</p>
-                <p className="text-xs">
-                  <Stars value={Math.round(p.rating)} /> <span className="text-muted-foreground">({p.reviews})</span>
-                </p>
-                <button
-                  className="mt-2 h-10 w-full rounded-xl bg-[#BD915F] text-xs font-semibold text-[#00264C]"
-                  onClick={() => addToCart(p.id, color === "Any" ? "Copper" : (color as MerchColor), size === "Any" ? "M" : (size as MerchSize))}
-                >
+                <button className="mt-2 h-10 w-full rounded-xl bg-[#BD915F] text-xs font-semibold text-[#00264C]" onClick={() => addToCart(p.id)}>
                   Add to Cart
                 </button>
               </div>
             </article>
           ))}
         </div>
+        <div className="grid grid-cols-2 gap-2">
+          {shopPerks.map((perk) => (
+            <div key={perk.title} className="rounded-2xl bg-white p-3 shadow-sm">
+              <p className="font-display text-lg leading-tight">{perk.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{perk.text}</p>
+            </div>
+          ))}
+        </div>
       </div>
-      <Sheet open={filter} title="Filter" onClose={() => setFilter(false)}>
-        <Field label="Size">
+      <Sheet open={filter} title="Filter Products" onClose={() => setFilter(false)}>
+        <Field label="Collections">
           <div className="flex flex-wrap gap-2">
-            {["Any", ...SIZES].map((s) => (
-              <Chip key={s} active={size === s} onClick={() => setSize(s)}>
-                {s}
-              </Chip>
-            ))}
-          </div>
-        </Field>
-        <Field label="Color">
-          <div className="mt-2 flex flex-wrap gap-2">
-            {["Any", ...COLORS].map((c) => (
-              <Chip key={c} active={color === c} onClick={() => setColor(c)}>
+            {shopCategories.map((c) => (
+              <Chip key={c} active={cat === c} onClick={() => setCat(c)}>
                 {c}
               </Chip>
             ))}
           </div>
         </Field>
         <Field label={`Price up to ${money(max)}`}>
-          <input type="range" min={28} max={60} value={max} onChange={(e) => setMax(Number(e.target.value))} className="w-full accent-[#BD915F]" />
+          <input type="range" min={10} max={58} value={max} onChange={(e) => setMax(Number(e.target.value))} className="w-full accent-[#BD915F]" />
         </Field>
       </Sheet>
-    </div>
-  );
-}
-
-function ProductShot({ product, color }: { product: Product; color: MerchColor }) {
-  return (
-    <div className="relative">
-      <Photo src={product.images[color]} alt={`${product.name} in ${color}`} className="aspect-square w-full" />
-      <img src={logoSrc} alt="" className="absolute bottom-2 left-2 h-8 w-auto object-contain drop-shadow" />
     </div>
   );
 }
@@ -114,10 +105,7 @@ function ProductShot({ product, color }: { product: Product; color: MerchColor }
 export function ProductDetail({ id }: { id: string }) {
   const product = productById(id);
   const { addToCart, push, wishlist, toggleWish } = useApp();
-  const [color, setColor] = useState<MerchColor>("Copper");
-  const [size, setSize] = useState<MerchSize>("M");
   const [qty, setQty] = useState(1);
-  const [guide, setGuide] = useState(false);
   const [zoom, setZoom] = useState(false);
   const [ship, setShip] = useState(false);
   if (!product) return null;
@@ -126,7 +114,7 @@ export function ProductDetail({ id }: { id: string }) {
     <div className="h-full overflow-y-auto pb-8">
       <div className="relative">
         <button className="block w-full" onClick={() => setZoom(true)}>
-          <ProductShot product={product} color={color} />
+          <Photo src={product.image} alt={product.name} className="aspect-[41/34] w-full" />
         </button>
         <BackFloat />
         <div className="absolute right-3 top-3">
@@ -134,33 +122,11 @@ export function ProductDetail({ id }: { id: string }) {
         </div>
       </div>
       <div className="space-y-3 px-5 py-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#BD915F]">{product.category}</p>
+        {product.tag && <Badge tone="navy">{product.tag}</Badge>}
         <h1 className="font-display text-3xl">{product.name}</h1>
         <p className="font-display text-2xl text-[#BD915F]">{money(product.price)}</p>
-        <p className="text-sm">
-          <Stars value={Math.round(product.rating)} /> {product.rating} · {product.reviews} reviews
-        </p>
         <p className="text-sm leading-relaxed">{product.description}</p>
-        <p className="text-sm font-semibold">Color</p>
-        <div className="flex flex-wrap gap-2">
-          {COLORS.map((c) => (
-            <button key={c} onClick={() => setColor(c)} className={`h-11 rounded-full px-3 text-sm ${color === c ? "bg-[#00264C] text-white" : "bg-white"}`}>
-              {c}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold">Size</p>
-          <button className="text-sm font-semibold text-[#BD915F]" onClick={() => setGuide(true)}>
-            Size guide
-          </button>
-        </div>
-        <div className="flex gap-2">
-          {SIZES.map((s) => (
-            <button key={s} onClick={() => setSize(s)} className={`h-11 flex-1 rounded-xl text-sm font-semibold ${size === s ? "bg-[#BD915F] text-[#00264C]" : "bg-white"}`}>
-              {s}
-            </button>
-          ))}
-        </div>
         <div className="flex items-center gap-3">
           <button className="h-11 w-11 rounded-xl bg-white" onClick={() => setQty(Math.max(1, qty - 1))}>
             −
@@ -170,14 +136,14 @@ export function ProductDetail({ id }: { id: string }) {
             +
           </button>
         </div>
-        <Btn full onClick={() => addToCart(product.id, color, size, qty)}>
+        <Btn full onClick={() => addToCart(product.id, qty)}>
           Add to Cart
         </Btn>
         <Btn
           variant="navy"
           full
           onClick={() => {
-            addToCart(product.id, color, size, qty);
+            addToCart(product.id, qty);
             push({ name: "checkout" });
           }}
         >
@@ -186,53 +152,28 @@ export function ProductDetail({ id }: { id: string }) {
         <button className="w-full rounded-2xl bg-white p-4 text-left text-sm shadow-sm" onClick={() => setShip(!ship)}>
           <span className="font-semibold">Shipping and returns</span>
           {ship && (
-            <p className="mt-2 text-muted-foreground">
-              Eco-friendly packaging to ensure safe delivery. Full size exchanges and returns within 30 days. Proceeds support cattery genetic health testing. Decorated with care for Copper Road families.
-            </p>
+            <div className="mt-2 space-y-2 text-muted-foreground">
+              {shopPerks.map((perk) => (
+                <p key={perk.title}>
+                  <span className="font-semibold text-[#00264C]">{perk.title}.</span> {perk.text}
+                </p>
+              ))}
+            </div>
           )}
         </button>
         <h2 className="font-display text-2xl">You May Also Like</h2>
         <div className="no-scrollbar -mx-5 flex gap-3 overflow-x-auto px-5">
           {also.map((p) => (
             <button key={p.id} onClick={() => push({ name: "product", id: p.id })} className="w-36 shrink-0 overflow-hidden rounded-2xl bg-white text-left shadow-sm">
-              <Photo src={p.images.Navy} alt={p.name} className="h-28 w-full" />
+              <Photo src={p.image} alt={p.name} className="h-28 w-full" />
               <p className="p-2 text-sm">{p.name}</p>
             </button>
           ))}
         </div>
       </div>
-      <Sheet open={guide} title="Size guide" onClose={() => setGuide(false)}>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="text-muted-foreground">
-              <th className="py-2">Size</th>
-              <th>Chest</th>
-              <th>Length</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              ["S", "36–38", "27"],
-              ["M", "39–41", "28"],
-              ["L", "42–44", "29"],
-              ["XL", "45–48", "30"],
-              ["XXL", "49–52", "31"],
-            ].map((r) => (
-              <tr key={r[0]} className="border-t border-[#E1EFF9]">
-                {r.map((c) => (
-                  <td key={c} className="py-2">
-                    {c}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="mt-3 text-xs text-muted-foreground">Measurements in inches. Unisex cut. When in doubt, size up for a Maine Coon on the lap.</p>
-      </Sheet>
       {zoom && (
         <button className="absolute inset-0 z-50 bg-[#00264C]" onClick={() => setZoom(false)}>
-          <img src={product.images[color]} alt={`${product.name} zoomed`} className="h-full w-full object-contain" />
+          <img src={product.image} alt={`${product.name} zoomed`} className="h-full w-full object-contain" />
         </button>
       )}
     </div>
@@ -322,12 +263,10 @@ function CartRow({ line, onQty, onRemove }: { line: CartLine; onQty: (n: number)
         if (x - e.changedTouches[0].clientX > 70) onRemove();
       }}
     >
-      <Photo src={p.images[line.color]} alt={p.name} className="h-20 w-20 rounded-2xl" />
+      <Photo src={p.image} alt={p.name} className="h-20 w-20 rounded-2xl" />
       <div className="flex-1">
         <p className="font-semibold leading-tight">{p.name}</p>
-        <p className="text-xs text-muted-foreground">
-          {line.color} · {line.size}
-        </p>
+        <p className="text-xs text-muted-foreground">{p.category}</p>
         <div className="mt-1 flex items-center gap-2">
           <button className="h-9 w-9 rounded-lg bg-[#E1EFF9]" onClick={() => onQty(line.qty - 1)}>
             −
@@ -500,7 +439,7 @@ export function Checkout() {
               const p = productById(l.productId);
               return (
                 <p key={l.key}>
-                  {p?.name} · {l.color} / {l.size} × {l.qty}
+                  {p?.name} · {p?.category} × {l.qty}
                 </p>
               );
             })}
@@ -601,7 +540,7 @@ export function OrderDetail({ id }: { id: string }) {
         <div className="mt-3 space-y-2">
           {order.lines.map((l) => (
             <p key={l.key} className="text-sm">
-              {productById(l.productId)?.name} · {l.color} / {l.size} × {l.qty}
+              {productById(l.productId)?.name} × {l.qty}
             </p>
           ))}
         </div>
@@ -610,7 +549,7 @@ export function OrderDetail({ id }: { id: string }) {
           full
           className="mt-4"
           onClick={() => {
-            order.lines.forEach((l) => addToCart(l.productId, l.color, l.size, l.qty));
+            order.lines.forEach((l) => addToCart(l.productId, l.qty));
             toast("Items added back to your cart");
             push({ name: "cart" });
           }}
@@ -634,7 +573,7 @@ export function Wishlist() {
         <div className="grid grid-cols-2 gap-3 px-4 pb-8">
           {items.map((p) => (
             <button key={p.id} onClick={() => push({ name: "product", id: p.id })} className="overflow-hidden rounded-3xl bg-white text-left shadow-sm">
-              <Photo src={p.images.Copper} alt={p.name} className="aspect-square w-full" />
+              <Photo src={p.image} alt={p.name} className="aspect-[41/34] w-full" />
               <p className="p-3 font-display text-lg leading-tight">{p.name}</p>
             </button>
           ))}

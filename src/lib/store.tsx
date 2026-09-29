@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { demoUser, type MerchColor, type MerchSize, type Review, seedReviews } from "./copper-data";
+import { demoUser, type Review, seedReviews } from "./copper-data";
 
 export type TabId = "home" | "cats" | "shop" | "learn" | "profile";
 
@@ -63,8 +63,6 @@ export type User = {
 export type CartLine = {
   key: string;
   productId: string;
-  color: MerchColor;
-  size: MerchSize;
   qty: number;
 };
 
@@ -129,8 +127,8 @@ const seedOrder: Order = {
   id: "CR-M-1042",
   createdAt: "August 12, 2026",
   status: "Delivered",
-  lines: [{ key: "classic-tee-Navy-M", productId: "classic-tee", color: "Navy", size: "M", qty: 1 }],
-  total: 40.08,
+  lines: [{ key: "the-classic-logo-tee", productId: "the-classic-logo-tee", qty: 1 }],
+  total: 28,
   address: "Jordan Hale, Sioux Falls, SD 57104",
   method: "Standard",
 };
@@ -179,7 +177,7 @@ type Store = {
   updateUser: (patch: Partial<User>) => void;
   toggleTheme: () => void;
   setLanguage: (language: "English" | "Español") => void;
-  addToCart: (productId: string, color: MerchColor, size: MerchSize, qty?: number) => void;
+  addToCart: (productId: string, qty?: number) => void;
   setQty: (key: string, qty: number) => void;
   removeLine: (key: string) => void;
   toggleWish: (productId: string) => void;
@@ -328,12 +326,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateUser = (patch: Partial<User>) => setUser((u) => (u ? { ...u, ...patch } : u));
 
-  const addToCart = (productId: string, color: MerchColor, size: MerchSize, qty = 1) => {
-    const key = `${productId}-${color}-${size}`;
+  const addToCart = (productId: string, qty = 1) => {
     setCart((lines) => {
-      const found = lines.find((l) => l.key === key);
-      if (found) return lines.map((l) => (l.key === key ? { ...l, qty: l.qty + qty } : l));
-      return [...lines, { key, productId, color, size, qty }];
+      const found = lines.find((l) => l.key === productId);
+      if (found) return lines.map((l) => (l.key === productId ? { ...l, qty: l.qty + qty } : l));
+      return [...lines, { key: productId, productId, qty }];
     });
     toast("Added to cart");
   };

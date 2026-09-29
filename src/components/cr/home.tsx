@@ -252,13 +252,13 @@ export function HomeScreen() {
       </section>
 
       <section className="mx-4 overflow-hidden rounded-3xl bg-[#00264C] text-white">
-        <Photo src={products[3].images.Copper} alt="Copper Road signature hoodie" className="h-40 w-full" />
+        <Photo src={products[1].image} alt="Cozy Cattery Hoodie" className="h-40 w-full" />
         <div className="p-5">
           <h2 className="font-display text-3xl">Take A Little Copper Road Home With You</h2>
-          <p className="mt-1 text-sm text-white/75">Showcase branded merchandise for Maine Coon lovers and Copper Road families.</p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {["T-Shirts", "Hoodies"].map((label) => (
-              <button key={label} onClick={() => goTab("shop")} className="rounded-2xl bg-white/10 py-4 text-sm font-semibold">
+          <p className="mt-1 text-sm text-white/75">Cattery merchandise for Maine Coon lovers and Copper Road families.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {["Apparel", "Mugs & Drinkware", "Accessories"].map((label) => (
+              <button key={label} onClick={() => goTab("shop")} className="rounded-2xl bg-white/10 px-3 py-3 text-sm font-semibold">
                 {label}
               </button>
             ))}

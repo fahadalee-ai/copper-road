@@ -580,104 +580,84 @@ export const seedReviews: Review[] = [
   },
 ];
 
-export const COLORS = ["Copper", "Navy", "Ice Blue", "White"] as const;
-export const SIZES = ["S", "M", "L", "XL", "XXL"] as const;
-export type MerchColor = (typeof COLORS)[number];
-export type MerchSize = (typeof SIZES)[number];
+export const shopCategories = ["All", "Apparel", "Mugs & Drinkware", "Accessories"] as const;
+export type ShopCategory = Exclude<(typeof shopCategories)[number], "All">;
 
 export type Product = {
   id: string;
   name: string;
-  category: "T-Shirts" | "Hoodies";
+  category: ShopCategory;
   price: number;
-  rating: number;
-  reviews: number;
   description: string;
-  images: Record<MerchColor, string>;
+  image: string;
+  tag?: string;
   featured?: boolean;
 };
 
-const tee = {
-  Copper: aiImg("tee-copper.jpg"),
-  Navy: aiImg("tee-navy.jpg"),
-  "Ice Blue": aiImg("tee-white.jpg"),
-  White: aiImg("tee-white.jpg"),
-};
-const hood = {
-  Copper: aiImg("hoodie-copper.jpg"),
-  Navy: aiImg("hoodie-navy.jpg"),
-  "Ice Blue": aiImg("hoodie-ice.jpg"),
-  White: aiImg("hoodie-ice.jpg"),
-};
+export const shopPerks = [
+  { title: "USA Hand-Printed", text: "Decorated by master artisans in South Dakota." },
+  { title: "Careful Shipping", text: "Eco-friendly packaging to ensure safe delivery." },
+  { title: "Quality Guarantee", text: "Full size exchanges and returns within 30 days." },
+  { title: "Supporting Wellness", text: "Proceeds support cattery genetic health testing." },
+];
 
 export const products: Product[] = [
   {
-    id: "classic-tee",
-    name: "Copper Road Classic T-Shirt",
-    category: "T-Shirts",
-    price: 32,
-    rating: 4.9,
-    reviews: 28,
+    id: "the-classic-logo-tee",
+    name: "The Classic Logo Tee",
+    category: "Apparel",
+    price: 28,
     featured: true,
+    tag: "Best Seller",
     description:
-      "100% premium heavy cotton tee featuring our Copper Road emblem. Preshrunk, unisex cut, in a warm copper clay and deep cattery colors. All proceeds go directly back into our veterinary health testing program, certified nutrition, and play structures for our kittens.",
-    images: tee,
+      "100% premium heavy cotton tee featuring our iconic Copper Road hand-drawn paw emblem. Preshrunk, unisex cut, in copper clay color.",
+    image: siteImg("image-container.png"),
   },
   {
-    id: "mama-tee",
-    name: "Maine Coon Mama T-Shirt",
-    category: "T-Shirts",
-    price: 32,
-    rating: 4.8,
-    reviews: 19,
-    description:
-      "A soft heavyweight tee for the people who do the morning chin scratches and the midnight zoomies. Unisex cut, preshrunk cotton, made to be lived in.",
-    images: { ...tee, Copper: aiImg("tee-copper.jpg"), Navy: aiImg("tee-navy.jpg") },
-  },
-  {
-    id: "papa-tee",
-    name: "Maine Coon Papa T-Shirt",
-    category: "T-Shirts",
-    price: 32,
-    rating: 4.8,
-    reviews: 16,
-    description:
-      "The companion tee to Mama. Same premium cotton, same easy unisex fit, with room for a cat who believes laps are furniture.",
-    images: tee,
-  },
-  {
-    id: "signature-hoodie",
-    name: "Copper Road Signature Hoodie",
-    category: "Hoodies",
+    id: "cozy-cattery-hoodie",
+    name: "Cozy Cattery Hoodie",
+    category: "Apparel",
     price: 58,
-    rating: 5,
-    reviews: 22,
-    featured: true,
+    tag: "Cozy Pick",
     description:
-      "Heavyweight warm pullover fleece, perfect for crisp South Dakota mornings. A gold-toned Copper Road mark sits over a cozy, substantial hood.",
-    images: hood,
+      "Heavyweight warm pullover fleece, perfect for crisp South Dakota mornings. Gold embroidered ‘Copper Road Maine Coons’ arch style.",
+    image: siteImg("Rectangle-7.png"),
   },
   {
-    id: "navy-hoodie",
-    name: "Navy Cozy Hoodie",
-    category: "Hoodies",
-    price: 54,
-    rating: 4.7,
-    reviews: 14,
+    id: "heritage-ceramic-mug",
+    name: "Heritage Ceramic Mug",
+    category: "Mugs & Drinkware",
+    price: 18,
     description:
-      "Deep navy fleece with a soft hand and a roomy hood. Built for barn-coat weather and couch evenings with a kitten on the sleeve.",
-    images: hood,
+      "Artisanal hand-dipped pottery mug. Stamped with TICA credentials & the Copper Road seal. Holds 14 oz of your favorite brew.",
+    image: siteImg("Rectangle-8.png"),
   },
   {
-    id: "family-hoodie",
-    name: "Copper Road Family Hoodie",
-    category: "Hoodies",
-    price: 60,
-    rating: 4.9,
-    reviews: 11,
+    id: "standard-canvas-tote",
+    name: "Standard Canvas Tote",
+    category: "Accessories",
+    price: 22,
     description:
-      "Our family hoodie, cut a little fuller, for the household that adopted the cat and then adopted the cattery. Proceeds support genetic health testing.",
-    images: hood,
+      "Durable, thick organic cotton duck bag for daily trips. Deep inner pockets to hold brush gear, toys, or daily groceries.",
+    image: siteImg("Rectangle-9-1.png"),
+  },
+  {
+    id: "embroidered-paw-cap",
+    name: "Embroidered Paw Cap",
+    category: "Accessories",
+    price: 24,
+    description:
+      "Unstructured pigment-dyed adjustable cap. Features an intricate gold and navy paw stitch. Built to fade beautifully.",
+    image: siteImg("image-container-1.png"),
+  },
+  {
+    id: "cattery-sticker-pack",
+    name: "Cattery Sticker Pack",
+    category: "Accessories",
+    price: 10,
+    description:
+      "A set of five durable waterproof die-cut vinyl stickers. Hand-sketched cat faces, paw badges, and TICA stamp illustrations.",
+    image: siteImg("image-container-2.png"),
   },
 ];
 

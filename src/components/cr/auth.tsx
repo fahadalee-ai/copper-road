@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Eye, EyeOff, Mail, Lock, Phone, User } from "lucide-react";
-import { logoSrc, aiImg, siteImg, US_STATES, hearAbout } from "@/lib/copper-data";
+import { logoSrc, siteImg, US_STATES, hearAbout } from "@/lib/copper-data";
 import { useApp } from "@/lib/store";
 import { Area, Btn, Eyebrow, Field, Photo, SelectField, TextField } from "./ui";
 
@@ -81,22 +81,25 @@ export function Splash() {
 
 const slides = [
   {
-    img: siteImg("Rectangle-6.png"),
-    alt: "Majestic Maine Coon portrait",
+    img: siteImg("Rectangle-17.png"),
+    alt: "Silver Maine Coon looking toward the camera",
+    focus: "object-[center_45%]",
     eyebrow: "WELCOME TO COPPER ROAD",
     title: "More Than A Cattery. We're A Family.",
     text: "At Copper Road Maine Coons, we're dedicated to raising healthy, happy, and sociable kittens, giving families a loving, gentle companion and a forever friend to cherish for years to come.",
   },
   {
-    img: siteImg("Rectangle-6-1.png"),
-    alt: "Queens and Kings of Copper Road",
+    img: siteImg("KIKI.png"),
+    alt: "KiKi, a Copper Road Maine Coon queen",
+    focus: "object-[center_20%]",
     eyebrow: "MEET OUR MAINE COONS",
     title: "The Heart Of Copper Road",
     text: "All of our Queens and Kings are purebred Maine Coons, each with a certified 5-generation pedigree, proudly registered with TICA (The International Cat Association).",
   },
   {
-    img: aiImg("family-kitten.jpg"),
-    alt: "A family holding a Maine Coon kitten",
+    img: siteImg("Happy-kitten-in-hands.png"),
+    alt: "A kitten held gently in two hands",
+    focus: "object-[center_35%]",
     eyebrow: "RESPONSIBLE BREEDING",
     title: "Beauty Begins With Health.",
     text: "Our breeding program is built around thoughtful planning, responsible care, and the health and well-being of every Maine Coon. Apply for a kitten, follow our breeding plan, and shop Copper Road merch, all in one place.",
@@ -130,7 +133,8 @@ export function Onboarding() {
           src={s.img}
           alt={s.alt}
           eager
-          className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${n === i ? "opacity-100" : "pointer-events-none opacity-0"}`}
+          imgClassName={s.focus}
+          className={`absolute inset-x-0 top-0 h-[52%] w-full transition-opacity duration-500 ${n === i ? "opacity-100" : "pointer-events-none opacity-0"}`}
         />
       ))}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-28 bg-gradient-to-b from-[#00162e]/75 to-transparent" />
@@ -141,9 +145,9 @@ export function Onboarding() {
         Skip
       </button>
       <div
-        className="absolute inset-x-0 bottom-0 z-10 flex flex-col px-6 pb-8 pt-20"
+        className="absolute inset-x-0 bottom-0 top-[46%] z-10 flex flex-col justify-end px-6 pb-8 pt-10"
         style={{
-          background: "linear-gradient(to top, #00162e 0px, #00162e calc(100% - 64px), rgba(0,22,46,0) 100%)",
+          background: "linear-gradient(to top, #00162e 0%, #00162e 78%, rgba(0,22,46,0) 100%)",
         }}
       >
         <Eyebrow light>{slide.eyebrow}</Eyebrow>

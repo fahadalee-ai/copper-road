@@ -272,9 +272,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const goTab = (tab: TabId) => setStack([{ name: "main", tab }]);
 
   const finishSplash = () => {
-    if (user && !user.guest) reset({ name: "main", tab: "home" });
-    else if (!onboarded) reset({ name: "onboarding" });
-    else reset({ name: "login" });
+    reset({ name: "onboarding" });
   };
 
   const finishOnboarding = (dest: "login" | "home-guest") => {

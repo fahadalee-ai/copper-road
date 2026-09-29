@@ -11,7 +11,7 @@ import {
   trustBadges,
 } from "@/lib/copper-data";
 import { useApp } from "@/lib/store";
-import { Area, Badge, Btn, Divider, Eyebrow, Field, HeartBtn, HomeHeader, Photo, PullHint, StarPicker, Stars, TextField, statusTone } from "./ui";
+import { Area, Badge, Btn, Divider, Eyebrow, Field, HeartBtn, HomeHeader, Photo, PullHint, StarPicker, Stars, TextField, Viewer, statusTone } from "./ui";
 
 function XIcon() {
   return (
@@ -60,12 +60,22 @@ export function HomeScreen() {
   const [quote, setQuote] = useState("");
   const [stars, setStars] = useState(5);
   const [err, setErr] = useState("");
+  const [gallery, setGallery] = useState<number | null>(null);
+  const kittenGallery = kittens.flatMap((k) =>
+    k.gallery.map((src) => ({ src, alt: `${k.name}, ${k.coat} Maine Coon kitten`, id: k.id })),
+  );
 
   return (
     <PullHint>
       <HomeHeader />
-      <section className="relative h-[460px]">
-        <Photo src={siteImg("Rectangle-6.png")} alt="Majestic Copper Road Maine Coon" eager className="h-full w-full" />
+      <section className="relative h-[280px]">
+        <Photo
+          src={siteImg("Rectangle-6.png")}
+          alt="Majestic Copper Road Maine Coon"
+          eager
+          className="h-full w-full"
+          imgClassName="object-[70%_58%]"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-[#00264C] via-[#00264C]/35 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-5 text-white">
           <Eyebrow light>Breeding Healthy, Happy Maine Coon Cats</Eyebrow>
@@ -96,7 +106,19 @@ export function HomeScreen() {
         </div>
         <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
           {kittens.map((k) => (
-            <article key={k.id} className="w-56 shrink-0 overflow-hidden rounded-3xl bg-white shadow-sm">
+            <article
+              key={k.id}
+              role="link"
+              tabIndex={0}
+              onClick={() => push({ name: "kitten", id: k.id })}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  push({ name: "kitten", id: k.id });
+                }
+              }}
+              className="w-56 shrink-0 cursor-pointer overflow-hidden rounded-3xl bg-white text-left shadow-sm"
+            >
               <div className="relative">
                 <Photo src={k.photo} alt={`${k.name}, ${k.coat} Maine Coon kitten`} className="h-44 w-full" />
                 <div className="absolute left-2 top-2">
@@ -111,13 +133,24 @@ export function HomeScreen() {
                 <p className="text-xs text-muted-foreground">
                   {k.coat} · {k.sex}
                 </p>
-                <button className="mt-2 text-sm font-semibold text-[#BD915F]" onClick={() => push({ name: "kitten", id: k.id })}>
-                  View Details
-                </button>
+                <p className="mt-2 text-sm font-semibold text-[#BD915F]">View Details</p>
               </div>
             </article>
           ))}
         </div>
+        <div className="mt-4">
+          <h3 className="mb-2 font-display text-2xl">Gallery</h3>
+          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-2">
+            {kittenGallery.map((p, n) => (
+              <button key={`${p.id}-${p.src}-${n}`} onClick={() => setGallery(n)} className="w-28 shrink-0">
+                <Photo src={p.src} alt={p.alt} className="aspect-square w-full rounded-2xl" />
+              </button>
+            ))}
+          </div>
+        </div>
+        {gallery != null && (
+          <Viewer photos={kittenGallery} index={gallery} onClose={() => setGallery(null)} onIndex={setGallery} />
+        )}
       </section>
 
       <CatRow title="Meet The Queens Of Copper Road" list={queens} />

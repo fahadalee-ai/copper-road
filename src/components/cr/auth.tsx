@@ -106,30 +106,64 @@ const slides = [
 export function Onboarding() {
   const { finishOnboarding } = useApp();
   const [i, setI] = useState(0);
+  const startX = useRef(0);
   const slide = slides[i];
   const last = i === slides.length - 1;
+
+  const go = (n: number) => setI(Math.max(0, Math.min(slides.length - 1, n)));
+
   return (
-    <div className="flex h-full flex-col bg-[#E1EFF9]">
-      <div className="relative h-[60%] overflow-hidden rounded-b-[36px]">
-        <Photo src={slide.img} alt={slide.alt} eager className="h-full w-full" />
-        <button onClick={() => finishOnboarding("login")} className="absolute right-4 top-4 h-11 rounded-full bg-[#00264C]/50 px-4 text-sm font-medium text-white">
-          Skip
-        </button>
-      </div>
-      <div className="flex flex-1 flex-col px-6 pb-8 pt-6">
-        <Eyebrow>{slide.eyebrow}</Eyebrow>
-        <h1 className="mt-2 font-display text-[34px] leading-[1.05] text-[#00264C]">{slide.title}</h1>
-        <p className="mt-3 text-[15px] leading-relaxed text-[#3e5670]">{slide.text}</p>
-        <div className="mt-auto flex items-center justify-between pt-6">
-          <div className="flex gap-1.5">
+    <div
+      className="relative h-full overflow-hidden bg-[#00264C]"
+      onPointerDown={(e) => {
+        startX.current = e.clientX;
+      }}
+      onPointerUp={(e) => {
+        const dx = e.clientX - startX.current;
+        if (dx < -48) go(i + 1);
+        else if (dx > 48) go(i - 1);
+      }}
+    >
+      {slides.map((s, n) => (
+        <Photo
+          key={s.img}
+          src={s.img}
+          alt={s.alt}
+          eager
+          className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${n === i ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        />
+      ))}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-28 bg-gradient-to-b from-[#00162e]/75 to-transparent" />
+      <button
+        onClick={() => finishOnboarding("login")}
+        className="absolute right-5 top-5 z-10 h-11 rounded-full bg-[#00162e]/55 px-4 text-sm font-medium text-white backdrop-blur-md"
+      >
+        Skip
+      </button>
+      <div
+        className="absolute inset-x-0 bottom-0 z-10 flex flex-col px-6 pb-8 pt-20"
+        style={{
+          background: "linear-gradient(to top, #00162e 0px, #00162e calc(100% - 64px), rgba(0,22,46,0) 100%)",
+        }}
+      >
+        <Eyebrow light>{slide.eyebrow}</Eyebrow>
+        <h1 className="mt-2 font-display text-[34px] leading-[1.08] text-white">{slide.title}</h1>
+        <p className="mt-3 text-[15px] leading-relaxed text-white/95">{slide.text}</p>
+        <div className="mt-6 flex items-center justify-between">
+          <div className="flex gap-1.5" aria-label={`Slide ${i + 1} of ${slides.length}`}>
             {slides.map((_, n) => (
-              <span key={n} className={n === i ? "h-2 w-6 rounded-full bg-[#BD915F]" : "h-2 w-2 rounded-full bg-[#00264C]/20"} />
+              <button
+                key={n}
+                aria-label={`Go to slide ${n + 1}`}
+                onClick={() => go(n)}
+                className={n === i ? "h-2 w-6 rounded-full bg-[#BD915F]" : "h-2 w-2 rounded-full bg-white/45"}
+              />
             ))}
           </div>
           <Btn
             onClick={() => {
               if (last) finishOnboarding("login");
-              else setI(i + 1);
+              else go(i + 1);
             }}
           >
             {last ? "Get Started" : "Next"}

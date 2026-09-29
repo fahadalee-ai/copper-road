@@ -289,7 +289,6 @@ const steps = ["Shipping", "Delivery", "Payment", "Review"];
 export function Checkout() {
   const { cart, placeOrder, push, user } = useApp();
   const [step, setStep] = useState(0);
-  const [err, setErr] = useState("");
   const [form, setForm] = useState({
     name: user && !user.guest ? `${user.firstName} ${user.lastName}` : "",
     email: user?.guest ? "" : user?.email || "",
@@ -302,7 +301,6 @@ export function Checkout() {
     country: "United States",
     save: true,
     method: "Standard",
-    pay: "Card",
     card: "",
     cardName: "",
     exp: "",
@@ -316,16 +314,7 @@ export function Checkout() {
   const total = sub + ship + sub * 0.065;
 
   const next = () => {
-    if (step === 0 && (!form.name || !form.email.includes("@") || !form.line1 || !form.city || !form.zip)) {
-      setErr("Please complete the shipping address.");
-      return;
-    }
-    if (step === 2 && form.pay === "Card" && (form.card.replace(/\s/g, "").length < 12 || !form.exp || form.cvv.length < 3)) {
-      setErr("Check the card details.");
-      return;
-    }
     if (step === 3) {
-      if (!form.terms) return setErr("Please agree to the terms.");
       const id = placeOrder({
         lines: cart,
         total,
@@ -335,7 +324,6 @@ export function Checkout() {
       push({ name: "orderConfirm", orderId: id });
       return;
     }
-    setErr("");
     setStep(step + 1);
   };
 
@@ -401,33 +389,20 @@ export function Checkout() {
         )}
         {step === 2 && (
           <>
-            <div className="flex flex-wrap gap-2">
-              {["Card", "Apple Pay", "Google Pay", "PayPal"].map((p) => (
-                <Chip key={p} active={form.pay === p} onClick={() => set("pay", p)}>
-                  {p}
-                </Chip>
-              ))}
+            <Field label="Card Number">
+              <TextField value={form.card} onChange={(e) => set("card", e.target.value)} placeholder="4242 4242 4242 4242" />
+            </Field>
+            <Field label="Name on Card">
+              <TextField value={form.cardName} onChange={(e) => set("cardName", e.target.value)} />
+            </Field>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Expiry">
+                <TextField value={form.exp} onChange={(e) => set("exp", e.target.value)} placeholder="MM/YY" />
+              </Field>
+              <Field label="CVV">
+                <TextField value={form.cvv} onChange={(e) => set("cvv", e.target.value)} placeholder="123" />
+              </Field>
             </div>
-            {form.pay === "Card" ? (
-              <>
-                <Field label="Card Number">
-                  <TextField value={form.card} onChange={(e) => set("card", e.target.value)} placeholder="4242 4242 4242 4242" />
-                </Field>
-                <Field label="Name on Card">
-                  <TextField value={form.cardName} onChange={(e) => set("cardName", e.target.value)} />
-                </Field>
-                <div className="grid grid-cols-2 gap-2">
-                  <Field label="Expiry">
-                    <TextField value={form.exp} onChange={(e) => set("exp", e.target.value)} placeholder="MM/YY" />
-                  </Field>
-                  <Field label="CVV">
-                    <TextField value={form.cvv} onChange={(e) => set("cvv", e.target.value)} placeholder="123" />
-                  </Field>
-                </div>
-              </>
-            ) : (
-              <p className="rounded-3xl bg-white p-4 text-sm shadow-sm">{form.pay} will confirm on the next step in this preview. No charge is placed.</p>
-            )}
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={form.same} onChange={(e) => set("same", e.target.checked)} className="accent-[#BD915F]" /> Billing same as shipping
             </label>
@@ -447,7 +422,7 @@ export function Checkout() {
               {form.name}, {form.line1}, {form.city} {form.state} {form.zip}
             </p>
             <p>
-              {form.method} · {form.pay}
+              {form.method} · Card
             </p>
             <p className="font-display text-2xl text-[#BD915F]">{money(total)}</p>
             <label className="flex items-start gap-2">
@@ -456,7 +431,6 @@ export function Checkout() {
             </label>
           </div>
         )}
-        {err && <p className="text-sm text-[#b42318]">{err}</p>}
         <div className="flex gap-2">
           {step > 0 && (
             <Btn variant="outline" full onClick={() => setStep(step - 1)}>

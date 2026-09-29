@@ -156,42 +156,24 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [remember, setRemember] = useState(true);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [shake, setShake] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const submit = () => {
-    const next: typeof errors = {};
-    if (!email.includes("@")) next.email = "Enter a valid email address.";
-    if (password.length < 6) next.password = "Password must be at least 6 characters.";
-    setErrors(next);
-    if (Object.keys(next).length) {
-      setShake(true);
-      setTimeout(() => setShake(false), 450);
-      return;
-    }
     setLoading(true);
     setTimeout(() => {
-      const ok = login(email, password);
+      login(email, password);
       setLoading(false);
-      if (!ok) {
-        setErrors({ password: "Those details don't match our records." });
-        setShake(true);
-        setTimeout(() => setShake(false), 450);
-      } else if (!remember) {
-        /* session still local for the mockup */
-      }
-    }, 700);
+    }, 400);
   };
 
   return (
-    <div className={`h-full overflow-y-auto bg-background ${shake ? "shake" : ""}`}>
+    <div className="h-full overflow-y-auto bg-background">
       <AuthHeader title="Welcome Back" sub="Log in to manage your applications and orders." />
       <div className="space-y-4 px-5 py-6">
-        <Field label="Email Address" error={errors.email}>
+        <Field label="Email Address">
           <TextField icon={<Mail size={16} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" autoComplete="email" />
         </Field>
-        <Field label="Password" error={errors.password}>
+        <Field label="Password">
           <div className="relative">
             <TextField
               icon={<Lock size={16} />}
@@ -309,24 +291,10 @@ export function Register() {
     updates: true,
   });
   const [show, setShow] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const set = (k: string, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
   const strength = Math.min(4, [form.password.length >= 6, /[A-Z]/.test(form.password), /[0-9]/.test(form.password), form.password.length >= 10].filter(Boolean).length);
 
   const submit = () => {
-    const e: Record<string, string> = {};
-    if (!form.firstName) e.firstName = "Required";
-    if (!form.lastName) e.lastName = "Required";
-    if (!form.email.includes("@")) e.email = "Enter a valid email";
-    if (form.phone.replace(/\D/g, "").length < 7) e.phone = "Enter a phone number";
-    if (form.password.length < 6) e.password = "Use at least 6 characters";
-    if (form.password !== form.confirm) e.confirm = "Passwords do not match";
-    if (!form.city) e.city = "Required";
-    if (!/^\d{5}/.test(form.zip)) e.zip = "Enter a 5-digit ZIP";
-    if (!form.hear) e.hear = "Please choose one";
-    if (!form.terms) e.terms = "Please agree to continue";
-    setErrors(e);
-    if (Object.keys(e).length) return;
     register({
       firstName: form.firstName,
       lastName: form.lastName,
@@ -347,17 +315,17 @@ export function Register() {
       <AuthHeader title="Join The Copper Road Family" sub="Create an account to apply, save favorites, and shop." />
       <div className="space-y-3 px-5 py-6">
         <div className="grid grid-cols-2 gap-3">
-          <Field label="First Name" error={errors.firstName}>
+          <Field label="First Name">
             <TextField icon={<User size={16} />} value={form.firstName} onChange={(e) => set("firstName", e.target.value)} />
           </Field>
-          <Field label="Last Name" error={errors.lastName}>
+          <Field label="Last Name">
             <TextField value={form.lastName} onChange={(e) => set("lastName", e.target.value)} />
           </Field>
         </div>
-        <Field label="Email Address" error={errors.email}>
+        <Field label="Email Address">
           <TextField icon={<Mail size={16} />} value={form.email} onChange={(e) => set("email", e.target.value)} />
         </Field>
-        <Field label="Phone Number" error={errors.phone}>
+        <Field label="Phone Number">
           <div className="flex gap-2">
             <div className="relative shrink-0">
               <select
@@ -382,7 +350,7 @@ export function Register() {
             <TextField icon={<Phone size={16} />} value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="605 630 3008" />
           </div>
         </Field>
-        <Field label="Password" error={errors.password}>
+        <Field label="Password">
           <div className="relative">
             <TextField className="pr-12" type={show ? "text" : "password"} value={form.password} onChange={(e) => set("password", e.target.value)} />
             <button type="button" aria-label="Toggle password" className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center text-[#00264C]" onClick={() => setShow(!show)}>
@@ -395,21 +363,21 @@ export function Register() {
             ))}
           </div>
         </Field>
-        <Field label="Confirm Password" error={errors.confirm}>
+        <Field label="Confirm Password">
           <TextField type="password" value={form.confirm} onChange={(e) => set("confirm", e.target.value)} />
         </Field>
-        <Field label="City" error={errors.city}>
+        <Field label="City">
           <TextField value={form.city} onChange={(e) => set("city", e.target.value)} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="State">
             <SelectField value={form.state} onChange={(v) => set("state", v)} options={US_STATES} />
           </Field>
-          <Field label="Zip Code" error={errors.zip}>
+          <Field label="Zip Code">
             <TextField value={form.zip} onChange={(e) => set("zip", e.target.value)} />
           </Field>
         </div>
-        <Field label="How did you hear about us?" error={errors.hear}>
+        <Field label="How did you hear about us?">
           <SelectField value={form.hear} onChange={(v) => set("hear", v)} options={hearAbout} placeholder="Choose one" />
         </Field>
         <Field label="Are you interested in adopting a kitten?">
@@ -434,7 +402,6 @@ export function Register() {
             </button>
           </span>
         </label>
-        {errors.terms && <p className="text-xs text-[#b42318]">{errors.terms}</p>}
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" checked={form.updates} onChange={(e) => set("updates", e.target.checked)} className="mt-1 accent-[#BD915F]" />
           Send me kitten availability updates

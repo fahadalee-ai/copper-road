@@ -286,10 +286,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const login = (email: string, password: string) => {
-    const known = email.trim().toLowerCase() === demoUser.email && password === demoUser.password;
-    const ok = known || (email.includes("@") && password.length >= 6 && password.toLowerCase() !== "wrong");
-    if (!ok) return false;
-    setUser({ ...demoUser, email: email.trim(), password, guest: false, firstName: known ? demoUser.firstName : "Alex", lastName: known ? demoUser.lastName : "Family" });
+    const known = email.trim().toLowerCase() === demoUser.email;
+    setUser({
+      ...demoUser,
+      email: email.trim() || demoUser.email,
+      password,
+      guest: false,
+      firstName: known ? demoUser.firstName : email.trim() ? "Alex" : demoUser.firstName,
+      lastName: known ? demoUser.lastName : email.trim() ? "Family" : demoUser.lastName,
+    });
     reset({ name: "main", tab: "home" });
     return true;
   };

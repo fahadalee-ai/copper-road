@@ -84,18 +84,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "viewport",
         content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
-      { title: "Mobile App Starter" },
+      { title: "Copper Road Maine Coons" },
       {
         name: "description",
-        content: "Clean mobile app starter. This is the starting point for a new project.",
+        content: "Breeding healthy, happy Maine Coon cats in South Dakota.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#f7f7f8" },
+      { name: "theme-color", content: "#00264C" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: asset("/favicon.ico"), type: "image/x-icon" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap",
+      },
+      { rel: "icon", href: asset("/assets/images/logo.png"), type: "image/png" },
     ],
   }),
 

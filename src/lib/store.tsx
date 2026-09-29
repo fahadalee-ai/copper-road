@@ -1,254 +1,469 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import { clearStorage, readStorage, writeStorage } from "./storage";
-import {
-  seedActivity,
-  seedCompliance,
-  seedDocuments,
-  seedFieldwork,
-  seedForms,
-  seedNotifications,
-  seedSupervisor,
-  seedTemplates,
-  seedUsers,
-  type ActivityItem,
-  type AppDocument,
-  type AppNotification,
-  type ComplianceItem,
-  type FieldworkEntry,
-  type FormRecord,
-  type FormTemplate,
-  type Role,
-  type SupervisionSession,
-  type Supervisor,
-  type User,
-  seedSupervision,
-} from "./mock-data";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { demoUser, type MerchColor, type MerchSize, type Review, seedReviews } from "./copper-data";
 
-export type Toast = { id: number; title: string; body?: string };
+export type TabId = "home" | "cats" | "shop" | "learn" | "profile";
 
-type Prefs = {
-  "Supervision reminders": boolean;
-  "Compliance deadlines": boolean;
-  "Document expirations": boolean;
-  "Pending approvals": boolean;
+export type Screen =
+  | { name: "splash" }
+  | { name: "onboarding" }
+  | { name: "login" }
+  | { name: "reset" }
+  | { name: "register" }
+  | { name: "welcome" }
+  | { name: "main"; tab: TabId }
+  | { name: "cat"; id: string }
+  | { name: "kitten"; id: string }
+  | { name: "product"; id: string }
+  | { name: "cart" }
+  | { name: "checkout" }
+  | { name: "orderConfirm"; orderId: string }
+  | { name: "orders" }
+  | { name: "order"; id: string }
+  | { name: "wishlist" }
+  | { name: "breeding" }
+  | { name: "pedigree"; id: string }
+  | { name: "article"; id: string }
+  | { name: "guide"; id: "checklist" | "feeding" }
+  | { name: "apply" }
+  | { name: "applyDone"; ref: string }
+  | { name: "contact" }
+  | { name: "applications" }
+  | { name: "application"; id: string }
+  | { name: "journey" }
+  | { name: "favorites" }
+  | { name: "messages" }
+  | { name: "gallery" }
+  | { name: "testimonials" }
+  | { name: "about" }
+  | { name: "faqs" }
+  | { name: "notifications" }
+  | { name: "notifSettings" }
+  | { name: "settings" }
+  | { name: "editProfile" }
+  | { name: "password" }
+  | { name: "help" }
+  | { name: "legal"; doc: "terms" | "privacy" }
+  | { name: "search" };
+
+export type User = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  city: string;
+  state: string;
+  zip: string;
+  hear?: string;
+  adopting?: string;
+  updates?: boolean;
+  guest?: boolean;
 };
 
-type Store = {
-  users: User[];
+export type CartLine = {
+  key: string;
+  productId: string;
+  color: MerchColor;
+  size: MerchSize;
+  qty: number;
+};
+
+export type Order = {
+  id: string;
+  createdAt: string;
+  status: "Processing" | "Shipped" | "Delivered";
+  lines: CartLine[];
+  total: number;
+  address: string;
+  method: string;
+};
+
+export type Application = {
+  id: string;
+  createdAt: string;
+  status: "Submitted" | "Under Review" | "Approved" | "Waitlisted" | "Draft";
+  data: Record<string, string>;
+  timeline: { label: string; detail: string; done: boolean }[];
+};
+
+export type ChatMessage = {
+  id: string;
+  from: "cattery" | "me";
+  text: string;
+  time: string;
+  image?: string;
+};
+
+export type Toast = { id: number; title: string };
+
+type Persisted = {
   user: User | null;
   onboarded: boolean;
-  markOnboarded: () => void;
-  login: (email: string, password: string) => { ok: true } | { ok: false; reason: "invalid" | "admin" };
-  register: (input: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    bacbNumber?: string;
-    password: string;
-    role: Role;
-  }) => { ok: true; email: string } | { ok: false; reason: "exists" };
-  logout: () => void;
-  updateUser: (patch: Partial<User>) => void;
-  supervisor: Supervisor;
-  fieldwork: FieldworkEntry[];
-  addFieldwork: (entry: Omit<FieldworkEntry, "id" | "status">) => void;
-  updateFieldwork: (id: string, patch: Partial<FieldworkEntry>) => void;
-  removeFieldwork: (id: string) => void;
-  supervision: SupervisionSession[];
-  addSupervision: (entry: Omit<SupervisionSession, "id">) => void;
-  compliance: ComplianceItem[];
-  toggleRemind: (id: string) => void;
-  documents: AppDocument[];
-  addDocument: (doc: Omit<AppDocument, "id" | "status" | "uploadedAt"> & { status?: AppDocument["status"] }) => void;
-  replaceDocument: (id: string, name: string) => void;
-  removeDocument: (id: string) => void;
-  templates: FormTemplate[];
-  forms: FormRecord[];
-  submitForm: (record: Omit<FormRecord, "id" | "status" | "submittedAt">) => void;
-  notifications: AppNotification[];
-  markAllRead: () => void;
-  markNotificationRead: (id: string) => void;
-  activity: ActivityItem[];
-  prefs: Prefs;
-  togglePref: (key: keyof Prefs) => void;
+  theme: "light" | "dark";
+  language: "English" | "Español";
+  cart: CartLine[];
+  wishlist: string[];
+  favCats: string[];
+  favKittens: string[];
+  orders: Order[];
+  applications: Application[];
+  reviews: Review[];
+  messages: ChatMessage[];
+  notif: { litters: boolean; kittens: boolean; orders: boolean };
+  waitlist: string[];
+  draft: Record<string, string> | null;
+};
+
+const KEY = "copper-road-v1";
+
+const seedMessages: ChatMessage[] = [
+  {
+    id: "m1",
+    from: "cattery",
+    text: "Welcome to Copper Road. We're glad you're here. Ask us anything about our kittens, the breeding plan, or go-home day.",
+    time: "Yesterday",
+  },
+];
+
+const seedOrder: Order = {
+  id: "CR-M-1042",
+  createdAt: "August 12, 2026",
+  status: "Delivered",
+  lines: [{ key: "classic-tee-Navy-M", productId: "classic-tee", color: "Navy", size: "M", qty: 1 }],
+  total: 40.08,
+  address: "Jordan Hale, Sioux Falls, SD 57104",
+  method: "Standard",
+};
+
+function load(): Partial<Persisted> {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem(KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+type Store = {
+  screen: Screen;
+  stack: Screen[];
+  push: (s: Screen) => void;
+  back: () => void;
+  reset: (s: Screen) => void;
+  goTab: (tab: TabId) => void;
+  user: User | null;
+  onboarded: boolean;
+  theme: "light" | "dark";
+  language: "English" | "Español";
+  cart: CartLine[];
+  wishlist: string[];
+  favCats: string[];
+  favKittens: string[];
+  orders: Order[];
+  applications: Application[];
+  reviews: Review[];
+  messages: ChatMessage[];
+  notif: { litters: boolean; kittens: boolean; orders: boolean };
+  waitlist: string[];
+  draft: Record<string, string> | null;
   toasts: Toast[];
-  pushToast: (title: string, body?: string) => void;
-  dismissToast: (id: number) => void;
+  toast: (title: string) => void;
+  finishSplash: () => void;
+  finishOnboarding: (dest: "login" | "home-guest") => void;
+  login: (email: string, password: string) => boolean;
+  loginSocial: () => void;
+  continueGuest: () => void;
+  register: (user: User) => void;
+  logout: () => void;
+  deleteAccount: () => void;
+  updateUser: (patch: Partial<User>) => void;
+  toggleTheme: () => void;
+  setLanguage: (language: "English" | "Español") => void;
+  addToCart: (productId: string, color: MerchColor, size: MerchSize, qty?: number) => void;
+  setQty: (key: string, qty: number) => void;
+  removeLine: (key: string) => void;
+  toggleWish: (productId: string) => void;
+  toggleFavCat: (id: string) => void;
+  toggleFavKitten: (id: string) => void;
+  placeOrder: (order: Omit<Order, "id" | "createdAt" | "status">) => string;
+  saveDraft: (data: Record<string, string>) => void;
+  submitApplication: (data: Record<string, string>) => string;
+  addReview: (review: Omit<Review, "id">) => void;
+  sendMessage: (text: string, image?: string) => void;
+  toggleNotif: (key: "litters" | "kittens" | "orders") => void;
+  joinWaitlist: (litterId: string) => void;
+  cartCount: number;
+  unread: number;
 };
 
 const Ctx = createContext<Store | null>(null);
 
-const DEFAULT_PREFS: Prefs = {
-  "Supervision reminders": true,
-  "Compliance deadlines": true,
-  "Document expirations": true,
-  "Pending approvals": true,
-};
-
-function loadSessionUser(users: User[]): User | null {
-  const id = readStorage("session");
-  if (!id) return null;
-  return users.find((u) => u.id === id) ?? null;
-}
-
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<User[]>(seedUsers);
-  const [user, setUser] = useState<User | null>(() => loadSessionUser(seedUsers));
-  const [onboarded, setOnboarded] = useState(() => readStorage("onboarded") === "1");
-  const [fieldwork, setFieldwork] = useState(seedFieldwork);
-  const [supervision, setSupervision] = useState(seedSupervision);
-  const [compliance, setCompliance] = useState(seedCompliance);
-  const [documents, setDocuments] = useState(seedDocuments);
-  const [forms, setForms] = useState(seedForms);
-  const [notifications, setNotifications] = useState(seedNotifications);
-  const [activity, setActivity] = useState(seedActivity);
-  const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
+  const saved = useMemo(() => load(), []);
+  const [stack, setStack] = useState<Screen[]>([{ name: "splash" }]);
+  const [user, setUser] = useState<User | null>(saved.user ?? null);
+  const [onboarded, setOnboarded] = useState(!!saved.onboarded);
+  const [theme, setTheme] = useState<"light" | "dark">(saved.theme ?? "light");
+  const [language, setLanguage] = useState<"English" | "Español">(saved.language ?? "English");
+  const [cart, setCart] = useState<CartLine[]>(saved.cart ?? []);
+  const [wishlist, setWishlist] = useState<string[]>(saved.wishlist ?? []);
+  const [favCats, setFavCats] = useState<string[]>(saved.favCats ?? ["olive"]);
+  const [favKittens, setFavKittens] = useState<string[]>(saved.favKittens ?? ["seraphina"]);
+  const [orders, setOrders] = useState<Order[]>(saved.orders ?? [seedOrder]);
+  const [applications, setApplications] = useState<Application[]>(
+    saved.applications ?? [
+      {
+        id: "CR-2026-1842",
+        createdAt: "September 2, 2026",
+        status: "Under Review",
+        data: {
+          firstName: "Jordan",
+          lastName: "Hale",
+          kitten: "Any",
+          timeline: "1–3 months",
+          why: "We want a gentle giant who will grow up with our family.",
+        },
+        timeline: [
+          { label: "Submitted", detail: "We received your application.", done: true },
+          { label: "Under Review", detail: "Tami is reading through your home details.", done: true },
+          { label: "Approved", detail: "We'll write when a kitten matches.", done: false },
+          { label: "Waitlisted", detail: "A deposit holds your place when you are ready.", done: false },
+        ],
+      },
+    ],
+  );
+  const [reviews, setReviews] = useState<Review[]>(saved.reviews ?? seedReviews);
+  const [messages, setMessages] = useState<ChatMessage[]>(saved.messages ?? seedMessages);
+  const [notif, setNotif] = useState(saved.notif ?? { litters: true, kittens: true, orders: true });
+  const [waitlist, setWaitlist] = useState<string[]>(saved.waitlist ?? []);
+  const [draft, setDraft] = useState<Record<string, string> | null>(saved.draft ?? null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const value = useMemo<Store>(() => {
-    const pushToast = (title: string, body?: string) => {
-      const id = Date.now() + Math.random();
-      setToasts((t) => [...t, { id, title, body }]);
-      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
-    };
-
-    return {
-      users,
+  useEffect(() => {
+    const data: Persisted = {
       user,
       onboarded,
-      markOnboarded: () => {
-        setOnboarded(true);
-        writeStorage("onboarded", "1");
-      },
-      login: (email, password) => {
-        const found = users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-        if (!found || found.password !== password) return { ok: false, reason: "invalid" };
-        if (found.role === "admin") return { ok: false, reason: "admin" };
-        setUser(found);
-        writeStorage("session", found.id);
-        writeStorage("onboarded", "1");
-        setOnboarded(true);
-        return { ok: true };
-      },
-      register: (input) => {
-        if (users.some((u) => u.email.toLowerCase() === input.email.trim().toLowerCase())) {
-          return { ok: false, reason: "exists" };
-        }
-        const created: User = {
-          id: `u${Date.now()}`,
-          firstName: input.firstName.trim(),
-          lastName: input.lastName.trim(),
-          email: input.email.trim().toLowerCase(),
-          phone: input.phone.trim(),
-          password: input.password,
-          role: input.role,
-          bacbNumber: input.bacbNumber?.trim() || undefined,
-        };
-        setUsers((list) => [...list, created]);
-        writeStorage("onboarded", "1");
-        setOnboarded(true);
-        return { ok: true, email: created.email };
-      },
-      logout: () => {
-        setUser(null);
-        clearStorage("session");
-      },
-      updateUser: (patch) => {
-        if (!user) return;
-        const next = { ...user, ...patch };
-        setUser(next);
-        setUsers((list) => list.map((u) => (u.id === next.id ? next : u)));
-      },
-      supervisor: seedSupervisor,
-      fieldwork,
-      addFieldwork: (entry) => {
-        const next: FieldworkEntry = { ...entry, id: `fw${Date.now()}`, status: "pending" };
-        setFieldwork((list) => [next, ...list]);
-        setActivity((list) => [
-          { id: `a${Date.now()}`, text: `Fieldwork logged — ${entry.hours.toFixed(1)} hrs`, time: "Just now", tone: "orange" },
-          ...list,
-        ]);
-        pushToast("Fieldwork entry saved");
-      },
-      updateFieldwork: (id, patch) => setFieldwork((list) => list.map((e) => (e.id === id ? { ...e, ...patch } : e))),
-      removeFieldwork: (id) => setFieldwork((list) => list.filter((e) => e.id !== id)),
-      supervision,
-      addSupervision: (entry) => {
-        setSupervision((list) => [{ ...entry, id: `sv${Date.now()}` }, ...list]);
-        pushToast(entry.status === "requested" ? "Session requested" : "Submitted for sign-off");
-      },
-      compliance,
-      toggleRemind: (id) =>
-        setCompliance((list) => list.map((c) => (c.id === id ? { ...c, remind: !c.remind } : c))),
-      documents,
-      addDocument: (doc) => {
-        const next: AppDocument = {
-          ...doc,
-          id: `doc${Date.now()}`,
-          status: doc.status ?? "pending",
-          uploadedAt: new Date().toISOString().slice(0, 10),
-        };
-        setDocuments((list) => [next, ...list]);
-        if (doc.category) {
-          setCompliance((list) =>
-            list.map((c) =>
-              c.category === doc.category
-                ? { ...c, documentId: next.id, status: "current", detail: "Pending review" }
-                : c,
-            ),
-          );
-        }
-        pushToast("Document submitted");
-      },
-      replaceDocument: (id, name) => {
-        setDocuments((list) => list.map((d) => (d.id === id ? { ...d, name, status: "pending" } : d)));
-        pushToast("Document resubmitted");
-      },
-      removeDocument: (id) => setDocuments((list) => list.filter((d) => d.id !== id)),
-      templates: seedTemplates,
-      forms,
-      submitForm: (record) => {
-        const next: FormRecord = {
-          ...record,
-          id: `f${Date.now()}`,
-          status: "pending",
-          submittedAt: new Date().toISOString().slice(0, 10),
-        };
-        setForms((list) => [next, ...list.filter((f) => f.templateId !== record.templateId || f.status !== "todo")]);
-        pushToast("Form submitted");
-      },
-      notifications,
-      markAllRead: () => setNotifications((list) => list.map((n) => ({ ...n, read: true }))),
-      markNotificationRead: (id) =>
-        setNotifications((list) => list.map((n) => (n.id === id ? { ...n, read: true } : n))),
-      activity,
-      prefs,
-      togglePref: (key) => setPrefs((p) => ({ ...p, [key]: !p[key] })),
-      toasts,
-      pushToast,
-      dismissToast: (id) => setToasts((t) => t.filter((x) => x.id !== id)),
+      theme,
+      language,
+      cart,
+      wishlist,
+      favCats,
+      favKittens,
+      orders,
+      applications,
+      reviews,
+      messages,
+      notif,
+      waitlist,
+      draft,
     };
-  }, [
-    users,
+    localStorage.setItem(KEY, JSON.stringify(data));
+  }, [user, onboarded, theme, language, cart, wishlist, favCats, favKittens, orders, applications, reviews, messages, notif, waitlist, draft]);
+
+  const toast = (title: string) => {
+    const id = Date.now() + Math.random();
+    setToasts((t) => [...t, { id, title }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600);
+  };
+
+  const push = (s: Screen) => setStack((st) => [...st, s]);
+  const back = () => setStack((st) => (st.length > 1 ? st.slice(0, -1) : st));
+  const reset = (s: Screen) => setStack([s]);
+  const goTab = (tab: TabId) => setStack([{ name: "main", tab }]);
+
+  const finishSplash = () => {
+    if (user && !user.guest) reset({ name: "main", tab: "home" });
+    else if (!onboarded) reset({ name: "onboarding" });
+    else reset({ name: "login" });
+  };
+
+  const finishOnboarding = (dest: "login" | "home-guest") => {
+    setOnboarded(true);
+    if (dest === "home-guest") {
+      setUser({ ...demoUser, firstName: "Guest", lastName: "Family", guest: true, password: "" });
+      reset({ name: "main", tab: "home" });
+    } else reset({ name: "login" });
+  };
+
+  const login = (email: string, password: string) => {
+    const known = email.trim().toLowerCase() === demoUser.email && password === demoUser.password;
+    const ok = known || (email.includes("@") && password.length >= 6 && password.toLowerCase() !== "wrong");
+    if (!ok) return false;
+    setUser({ ...demoUser, email: email.trim(), password, guest: false, firstName: known ? demoUser.firstName : "Alex", lastName: known ? demoUser.lastName : "Family" });
+    reset({ name: "main", tab: "home" });
+    return true;
+  };
+
+  const loginSocial = () => {
+    setUser({ ...demoUser, guest: false });
+    reset({ name: "main", tab: "home" });
+  };
+
+  const continueGuest = () => {
+    setOnboarded(true);
+    setUser({ ...demoUser, firstName: "Guest", lastName: "Family", guest: true, password: "" });
+    reset({ name: "main", tab: "home" });
+  };
+
+  const register = (next: User) => {
+    setUser({ ...next, guest: false });
+    reset({ name: "welcome" });
+  };
+
+  const logout = () => {
+    setUser(null);
+    reset({ name: "login" });
+  };
+
+  const deleteAccount = () => {
+    setUser(null);
+    setApplications([]);
+    setCart([]);
+    toast("Account removed from this device");
+    reset({ name: "login" });
+  };
+
+  const updateUser = (patch: Partial<User>) => setUser((u) => (u ? { ...u, ...patch } : u));
+
+  const addToCart = (productId: string, color: MerchColor, size: MerchSize, qty = 1) => {
+    const key = `${productId}-${color}-${size}`;
+    setCart((lines) => {
+      const found = lines.find((l) => l.key === key);
+      if (found) return lines.map((l) => (l.key === key ? { ...l, qty: l.qty + qty } : l));
+      return [...lines, { key, productId, color, size, qty }];
+    });
+    toast("Added to cart");
+  };
+
+  const setQty = (key: string, qty: number) => {
+    setCart((lines) => (qty <= 0 ? lines.filter((l) => l.key !== key) : lines.map((l) => (l.key === key ? { ...l, qty } : l))));
+  };
+
+  const removeLine = (key: string) => setCart((lines) => lines.filter((l) => l.key !== key));
+
+  const toggleWish = (productId: string) => {
+    setWishlist((ids) => (ids.includes(productId) ? ids.filter((id) => id !== productId) : [...ids, productId]));
+  };
+
+  const toggleFavCat = (id: string) => setFavCats((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+  const toggleFavKitten = (id: string) => setFavKittens((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+
+  const placeOrder = (order: Omit<Order, "id" | "createdAt" | "status">) => {
+    const id = `CR-M-${Math.floor(1000 + Math.random() * 9000)}`;
+    const next: Order = { ...order, id, createdAt: "September 30, 2026", status: "Processing" };
+    setOrders((o) => [next, ...o]);
+    setCart([]);
+    return id;
+  };
+
+  const saveDraft = (data: Record<string, string>) => {
+    setDraft(data);
+    toast("Draft saved");
+  };
+
+  const submitApplication = (data: Record<string, string>) => {
+    const id = `CR-2026-${Math.floor(2000 + Math.random() * 7000)}`;
+    const app: Application = {
+      id,
+      createdAt: "September 30, 2026",
+      status: "Submitted",
+      data,
+      timeline: [
+        { label: "Submitted", detail: "We have your application.", done: true },
+        { label: "Under Review", detail: "We'll be in touch soon.", done: false },
+        { label: "Approved", detail: "A match, when the timing is right.", done: false },
+        { label: "Waitlisted", detail: "A deposit holds your place.", done: false },
+      ],
+    };
+    setApplications((list) => [app, ...list]);
+    setDraft(null);
+    return id;
+  };
+
+  const addReview = (review: Omit<Review, "id">) => {
+    setReviews((list) => [{ ...review, id: `rev-${Date.now()}` }, ...list]);
+    toast("Thank you for sharing your experience");
+  };
+
+  const sendMessage = (text: string, image?: string) => {
+    const mine: ChatMessage = { id: `c-${Date.now()}`, from: "me", text, time: "Now", image };
+    const reply: ChatMessage = {
+      id: `c-${Date.now() + 1}`,
+      from: "cattery",
+      text: "Thank you for writing. We'll reply personally as soon as we can — usually within a day.",
+      time: "Now",
+    };
+    setMessages((m) => [...m, mine, reply]);
+  };
+
+  const toggleNotif = (key: "litters" | "kittens" | "orders") => setNotif((n) => ({ ...n, [key]: !n[key] }));
+
+  const joinWaitlist = (litterId: string) => {
+    setWaitlist((ids) => (ids.includes(litterId) ? ids : [...ids, litterId]));
+    toast("You're on the waitlist");
+  };
+
+  const screen = stack[stack.length - 1] ?? { name: "splash" as const };
+  const cartCount = cart.reduce((n, l) => n + l.qty, 0);
+  const unread = 2;
+
+  const value: Store = {
+    screen,
+    stack,
+    push,
+    back,
+    reset,
+    goTab,
     user,
     onboarded,
-    fieldwork,
-    supervision,
-    compliance,
-    documents,
-    forms,
-    notifications,
-    activity,
-    prefs,
+    theme,
+    language,
+    cart,
+    wishlist,
+    favCats,
+    favKittens,
+    orders,
+    applications,
+    reviews,
+    messages,
+    notif,
+    waitlist,
+    draft,
     toasts,
-  ]);
+    toast,
+    finishSplash,
+    finishOnboarding,
+    login,
+    loginSocial,
+    continueGuest,
+    register,
+    logout,
+    deleteAccount,
+    updateUser,
+    toggleTheme: () => setTheme((t) => (t === "light" ? "dark" : "light")),
+    setLanguage,
+    addToCart,
+    setQty,
+    removeLine,
+    toggleWish,
+    toggleFavCat,
+    toggleFavKitten,
+    placeOrder,
+    saveDraft,
+    submitApplication,
+    addReview,
+    sendMessage,
+    toggleNotif,
+    joinWaitlist,
+    cartCount,
+    unread,
+  };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useApp() {
   const ctx = useContext(Ctx);
-  if (!ctx) throw new Error("useApp must be used inside AppProvider");
+  if (!ctx) throw new Error("useApp outside provider");
   return ctx;
 }

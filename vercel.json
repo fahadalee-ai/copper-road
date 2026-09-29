@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "npm run build",
+  "redirects": [
+    { "source": "/copper-road", "destination": "/", "permanent": false },
+    { "source": "/copper-road/", "destination": "/", "permanent": false },
+    { "source": "/copper-road/preview.html", "destination": "/preview.html", "permanent": false }
+  ]
+}

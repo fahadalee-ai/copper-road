@@ -1,27 +1,41 @@
+import type { Plugin } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-/** Public URL path (trailing slash). Must match Nginx `location` and `PREVIEW_URL` in preview.html. */
-const PRODUCTION_BASE = "/on-top-aba/";
+function legacyPathRedirect(): Plugin {
+  const handler = (req: { url?: string }, res: { statusCode: number; setHeader: (k: string, v: string) => void; end: () => void }, next: () => void) => {
+    const path = (req.url ?? "").split("?")[0];
+    const target =
+      path === "/copper-road" || path === "/copper-road/"
+        ? "/"
+        : path === "/copper-road/preview.html"
+          ? "/preview.html"
+          : "";
+    if (!target) return next();
+    res.statusCode = 302;
+    res.setHeader("Location", target);
+    res.end();
+  };
+  return {
+    name: "legacy-path-redirect",
+    configureServer(server) {
+      server.middlewares.use(handler);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(handler);
+    },
+  };
+}
 
 export default defineConfig({
-  cloudflare: false,
+  plugins: [legacyPathRedirect()],
+  nitro: { preset: "vercel" },
   vite: {
-    // Subpath must match Nginx and preview.html; use this for dev/preview/build so PM2 `vite preview` matches assets.
-    base: PRODUCTION_BASE,
-    // Allow the domain to access the preview server (if needed for SSR testing)
+    base: "/",
     server: {
-        allowedHosts: [
-            "demo.sourapps.com",
-            "localhost",
-            "127.0.0.1",
-        ],
+      allowedHosts: ["localhost", "127.0.0.1"],
     },
     preview: {
-        allowedHosts: [
-            "demo.sourapps.com",
-            "localhost",
-            "127.0.0.1",
-        ],
+      allowedHosts: ["localhost", "127.0.0.1"],
     },
   },
 });
